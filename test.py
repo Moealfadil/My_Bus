@@ -3,6 +3,7 @@ import numpy as np
 import cvzone
 import time
 from sort import Sort
+import scipy
 
 # Object detection parameters
 thres = 0.4
