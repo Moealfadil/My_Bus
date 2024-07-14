@@ -17,12 +17,6 @@ def send_gps_location(lat, lon, passengers, bus_id):
         'longitude': lon,
         'passengers': passengers,
         'bus_id': bus_id,
-    },
-        "location2": {
-        'latitude': lat,
-        'longitude': lon,
-        'passengers': passengers,
-        'bus_id': bus_id,
     }}
 
     # Update the data in the Realtime Database
