@@ -1,47 +1,84 @@
 import firebase_admin
-from firebase_admin import credentials, db
-from datetime import datetime
+from firebase_admin import credentials, firestore
+from geopy.distance import geodesic
 import time
 
 # Initialize Firebase
-cred = credentials.Certificate(r"C:\Users\fdool\Downloads\ComputerVisionTasks-main\Location\my-bus-421811-firebase-adminsdk-ex1ek-eea212c754.json")
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://my-bus-421811-default-rtdb.firebaseio.com/'
-})
+cred = credentials.Certificate(
+    r"C:\Users\fdool\Downloads\ComputerVisionTasks-main\Location\my-bus-421811-firebase-adminsdk-ex1ek-eea212c754.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 
-def send_gps_location(lat, lon, passengers, bus_id):
-    # Create the data to be sent
-    data = {"location1" :{
-        'latitude': lat,
-        'longitude': lon,
-        'passengers': passengers,
-        'bus_id': bus_id,
-    }}
+# Function to get bus stop data from Firestore
+def get_bus_stops():
+    bus_stops_ref = db.collection('Bus-stations')
+    docs = bus_stops_ref.stream()
 
-    # Update the data in the Realtime Database
-    db.reference('gps_locations').set(data)
+    bus_stops = []
+    for doc in docs:
+        stop_data = doc.to_dict()
+        # Convert Firestore GeoPoint to tuple
+        stop_data['loc'] = (stop_data['loc'].latitude, stop_data['loc'].longitude)
+        bus_stops.append(stop_data)
+    return bus_stops
 
 
-# Arrays for latitude, longitude, and passengers
-latitudes = [35.14237861, 35.14257861, 35.14277861, 35.14297861, 35.14317861, 35.14337861, 35.14357861, 35.14377861]
-longitudes = [33.9077102, 33.9075102, 33.9073102, 33.9071102, 33.9069102, 33.9067102, 33.9065102, 33.9063102]
-passengers = [90, 50, 10, 30, 40, 75, 80, 90]
+# Function to find the closest bus stop
+def find_closest_bus_stop(current_location, bus_stops):
+    closest_stop = None
+    min_distance = float('inf')
 
-# Bus ID
-bus_id = "5"
+    for stop in bus_stops:
+        stop_location = stop['loc']
+        distance = geodesic(current_location, stop_location).meters
+        if distance < min_distance:
+            min_distance = distance
+            closest_stop = stop
 
-# Ensure all arrays are of the same length
-if not (len(latitudes) == len(longitudes) == len(passengers)):
-    print("Error: Latitude, Longitude, and Passengers arrays must have the same length")
-else:
-    # Iterate through the arrays and send each location, passenger count, and bus ID to the Realtime Database
-    for lat, lon, psg in zip(latitudes, longitudes, passengers):
-        send_gps_location(lat, lon, psg, bus_id)
-        print(f"GPS location {lat}, {lon} with {psg} passengers and bus ID {bus_id} sent to Firebase Realtime Database")
-        time.sleep(1)  # Pause for 1 second between iterations
+    return closest_stop, min_distance
 
-print("All GPS locations sent to Firebase Realtime Database")
 
-#r"C:\Users\fdool\Downloads\ComputerVisionTasks-main\Location\my-bus-421811-firebase-adminsdk-ex1ek-eea212c754.json"
-#https://my-bus-421811-default-rtdb.firebaseio.com/
+# Function to determine the current and next bus stop
+def determine_bus_stops(current_location, bus_stops, line):
+    route_u_stops = [stop for stop in bus_stops if 'u' in stop['id']]
+    route_b_stops = [stop for stop in bus_stops if 'b' in stop['id']]
+
+    # Sort the stops by their id within each route
+    route_u_stops.sort(key=lambda x: x['id'])
+    route_b_stops.sort(key=lambda x: x['id'])
+
+    # Merge route u and b for line 5
+    combined_route_stops = route_u_stops + route_b_stops
+
+    current_stop, _ = find_closest_bus_stop(current_location, combined_route_stops)
+
+    if current_stop:
+        current_index = combined_route_stops.index(current_stop)
+        next_stop = combined_route_stops[current_index + 1] if current_index + 1 < len(combined_route_stops) else None
+        return current_stop, next_stop
+    return None, None
+
+
+# Simulating GPS data
+# In real implementation, replace these values with data from the GPS module
+latitudes = [35.141695, 35.1423563, 35.1452446, 35.1421206, 35.1407914, 35.1307779, 35.1277599, 35.1261780]
+longitudes = [33.907058, 33.9095623, 33.9094298, 33.9134012, 33.9116762, 33.9181349, 33.9224228, 33.9251674]
+
+
+# Load bus stops data
+bus_stops = get_bus_stops()
+
+# Iterate through the GPS data and determine bus stops
+for lat, lon in zip(latitudes, longitudes):
+    current_location = (lat, lon)
+    current_stop, next_stop = determine_bus_stops(current_location, bus_stops, line=5)
+
+    if current_stop:
+        print(f"Current Stop: {current_stop['name']} ({current_stop['loc']})")
+    if next_stop:
+        print(f"Next Stop: {next_stop['name']} ({next_stop['loc']})")
+
+    time.sleep(1)  # Pause for 1 second between iterations
+
+print("GPS data processing completed.")
