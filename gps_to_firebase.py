@@ -3,6 +3,7 @@ from firebase_admin import credentials, firestore, db
 from geopy.distance import geodesic
 import re
 import time
+from datetime import timedelta
 
 # Initialize Firebase Firestore
 cred = credentials.Certificate(
@@ -49,7 +50,7 @@ def natural_sort_key(s):
 
 
 # Function to determine the current and next bus stop
-def determine_bus_stops(current_location, bus_stops, line):
+def determine_bus_stops(current_location, bus_stops, line, on_return_trip):
     route_u_stops = [stop for stop in bus_stops if 'u' in stop['id']]
     route_b_stops = [stop for stop in bus_stops if 'b' in stop['id']]
 
@@ -60,19 +61,24 @@ def determine_bus_stops(current_location, bus_stops, line):
     # Merge route u and b for line 5
     combined_route_stops = route_u_stops + route_b_stops
 
+    # If on return trip, reverse the route
+    if on_return_trip:
+        combined_route_stops.reverse()
+
     current_stop, _ = find_closest_bus_stop(current_location, combined_route_stops)
 
     if current_stop:
         current_index = combined_route_stops.index(current_stop)
 
         # Determine if the bus is on the return trip
-        if 'b5' in combined_route_stops[current_index]['id']:
+        if not on_return_trip and current_stop['id'] == 'b5':
+            on_return_trip = True
             combined_route_stops.reverse()
             current_index = combined_route_stops.index(current_stop)
 
         next_stop = combined_route_stops[current_index + 1] if current_index + 1 < len(combined_route_stops) else None
-        return current_stop, next_stop
-    return None, None
+        return current_stop, next_stop, on_return_trip
+    return None, None, on_return_trip
 
 
 # Function to estimate time to next stop
@@ -85,7 +91,11 @@ def estimate_time_to_next_stop(current_location, next_stop_location, speed_mps):
 
 # Function to send data to Firebase Realtime Database
 def send_gps_data(lat, lon, passengers, bus_id, current_stop, next_stop, time_to_next_stop):
-    minutes, seconds = time_to_next_stop
+    if time_to_next_stop:
+        estimated_time = timedelta(minutes=time_to_next_stop[0], seconds=time_to_next_stop[1])
+    else:
+        estimated_time = None
+
     data = {
         'latitude': lat,
         'longitude': lon,
@@ -93,7 +103,7 @@ def send_gps_data(lat, lon, passengers, bus_id, current_stop, next_stop, time_to
         'bus_id': bus_id,
         'current_stop': current_stop['name'] if current_stop else None,
         'next_stop': next_stop['name'] if next_stop else None,
-        'estimated': f"{minutes} minutes and {seconds} seconds" if time_to_next_stop else None
+        'estimated': str(estimated_time) if estimated_time else None
     }
     realtime_db.set(data)
 
@@ -101,10 +111,15 @@ def send_gps_data(lat, lon, passengers, bus_id, current_stop, next_stop, time_to
 # Simulating GPS data
 # In real implementation, replace these values with data from the GPS module
 latitudes = [35.141695, 35.1423563, 35.1452446, 35.1421206, 35.1407914, 35.1307779, 35.1277599, 35.1261780, 35.1240909,
-             35.1226413, 35.1206592]
+             35.1226413, 35.1206592, 35.1226413, 35.12271759, 35.12279389, 35.12287018, 35.12294648, 35.12302277,
+             35.12309907, 35.12317536, 35.12325166, 35.12332795, 35.12340425, 35.12348054, 35.12355684, 35.12363313,
+             35.12370943, 35.12378572, 35.12386202, 35.12393831, 35.12401461, 35.1240909]
 longitudes = [33.907058, 33.9095623, 33.9094298, 33.9134012, 33.9116762, 33.9181349, 33.9224228, 33.9251674, 33.9292296,
-              33.9320308, 33.9361933]
-passengers = [90, 50, 10, 30, 40, 75, 80, 90, 61, 20, 35]
+              33.9320308, 33.9361933, 33.9320308, 33.93188337, 33.93173594, 33.93158851, 33.93144107, 33.93129364,
+              33.93114621, 33.93099878, 33.93085135, 33.93070392, 33.93055648, 33.93040905, 33.93026162, 33.93011419,
+              33.92996676, 33.92981933, 33.92967189, 33.92952446, 33.92937703, 33.9292296]
+passengers = [90, 50, 10, 30, 40, 75, 80, 90, 61, 20, 35, 5, 9, 31, 89, 52, 74, 74, 87, 74, 91, 88, 80, 71, 76, 80, 61,
+              16, 49, 17, 41]
 
 # Bus ID
 bus_id = "5"
@@ -119,10 +134,12 @@ bus_stops = get_bus_stops()
 if not (len(latitudes) == len(longitudes) == len(passengers)):
     print("Error: Latitude, Longitude, and Passengers arrays must have the same length")
 else:
+    on_return_trip = False  # Track if the bus is on the return trip
     # Iterate through the GPS data and determine bus stops
     for lat, lon, psg in zip(latitudes, longitudes, passengers):
         current_location = (lat, lon)
-        current_stop, next_stop = determine_bus_stops(current_location, bus_stops, line=5)
+        current_stop, next_stop, on_return_trip = determine_bus_stops(current_location, bus_stops, line=5,
+                                                                      on_return_trip=on_return_trip)
         time_to_next_stop = estimate_time_to_next_stop(current_location, next_stop['loc'],
                                                        bus_speed_mps) if next_stop else None
 
