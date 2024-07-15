@@ -93,7 +93,7 @@ def send_gps_data(lat, lon, passengers, bus_id, current_stop, next_stop, time_to
         'bus_id': bus_id,
         'current_stop': current_stop['name'] if current_stop else None,
         'next_stop': next_stop['name'] if next_stop else None,
-        'time_to_next_stop': f"{minutes} minutes and {seconds} seconds" if time_to_next_stop else None
+        'estimated': f"{minutes} minutes and {seconds} seconds" if time_to_next_stop else None
     }
     realtime_db.set(data)
 
