@@ -5,6 +5,7 @@ import re
 import time
 from datetime import timedelta
 
+
 # Initialize Firebase Firestore
 cred = credentials.Certificate(
     r"C:\Users\fdool\Downloads\ComputerVisionTasks-main\Location\my-bus-421811-firebase-adminsdk-ex1ek-eea212c754.json")
@@ -28,16 +29,16 @@ def get_bus_stops():
         bus_stops.append(stop_data)
     return bus_stops
 
-
+current_stop = None
 # Function to find the closest bus stop
 def find_closest_bus_stop(current_location, bus_stops):
-    closest_stop = None
+    closest_stop = current_stop if current_stop else None
     min_distance = float('inf')
 
     for stop in bus_stops:
         stop_location = stop['loc']
         distance = geodesic(current_location, stop_location).meters
-        if distance < min_distance:
+        if distance < min_distance and distance < 5:
             min_distance = distance
             closest_stop = stop
 
@@ -110,22 +111,22 @@ def send_gps_data(lat, lon, passengers, bus_id, current_stop, next_stop, time_to
 
 # Simulating GPS data
 # In real implementation, replace these values with data from the GPS module
-latitudes = [35.141695, 35.1423563, 35.1452446, 35.1421206, 35.1407914, 35.1307779, 35.1277599, 35.1261780, 35.1240909,
+latitudes = [35.141695, 35.1423563, 35.1452446, 35.1421206, 35.1407914, 35.1307779,35.13061906,35.13046022,35.13030137,35.13014253,35.12998369,35.12982485,35.12966601,35.12950716,35.12934832,35.12918948,35.12903064,35.12887179,35.12871295,35.12855411,35.12839527,35.12823643,35.12807758,35.12791874,35.1277599, 35.1261780, 35.1240909,
              35.1226413, 35.1206592, 35.1226413, 35.12271759, 35.12279389, 35.12287018, 35.12294648, 35.12302277,
              35.12309907, 35.12317536, 35.12325166, 35.12332795, 35.12340425, 35.12348054, 35.12355684, 35.12363313,
              35.12370943, 35.12378572, 35.12386202, 35.12393831, 35.12401461, 35.1240909]
-longitudes = [33.907058, 33.9095623, 33.9094298, 33.9134012, 33.9116762, 33.9181349, 33.9224228, 33.9251674, 33.9292296,
+longitudes = [33.907058, 33.9095623, 33.9094298, 33.9134012, 33.9116762, 33.9181349,33.91836058,33.91858626,33.91881194,33.91903762,33.91926329,33.91948897,33.91971465,33.91994033,33.92016601,33.92039169,33.92061737,33.92084305,33.92106873,33.92129441,33.92152008,33.92174576,33.92197144,33.92219712,33.9224228 , 33.9251674, 33.9292296,
               33.9320308, 33.9361933, 33.9320308, 33.93188337, 33.93173594, 33.93158851, 33.93144107, 33.93129364,
               33.93114621, 33.93099878, 33.93085135, 33.93070392, 33.93055648, 33.93040905, 33.93026162, 33.93011419,
               33.92996676, 33.92981933, 33.92967189, 33.92952446, 33.92937703, 33.9292296]
-passengers = [90, 50, 10, 30, 40, 75, 80, 90, 61, 20, 35, 5, 9, 31, 89, 52, 74, 74, 87, 74, 91, 88, 80, 71, 76, 80, 61,
+passengers = [90, 50, 10, 30, 40, 75, 75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75, 80, 90, 61, 20, 35, 5, 9, 31, 89, 52, 74, 74, 87, 74, 91, 88, 80, 71, 76, 80, 61,
               16, 49, 17, 41]
 
 # Bus ID
 bus_id = "5"
 
 # Assumed bus speed in meters per second (e.g., 10 m/s ~ 36 km/h)
-bus_speed_mps = 10
+bus_speed_mps = 15
 
 # Load bus stops data
 bus_stops = get_bus_stops()
