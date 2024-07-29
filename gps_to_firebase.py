@@ -7,7 +7,7 @@ from datetime import timedelta
 
 # Initialize Firebase Firestore
 cred = credentials.Certificate(
-    r"C:\Users\fdool\Downloads\ComputerVisionTasks-main\Location\my-bus-421811-firebase-adminsdk-ex1ek-eea212c754.json")
+    r"C:\Users\fdool\OneDrive\Documents\My_Bus\my-bus-421811-firebase-adminsdk-ex1ek-eea212c754.json")
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://my-bus-421811-default-rtdb.firebaseio.com/'
 })
