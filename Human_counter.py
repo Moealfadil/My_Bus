@@ -26,7 +26,7 @@ net.setInputMean((127.5, 127.5, 127.5))
 net.setInputSwapRB(True)
 
 # Load video
-video_capture = cv2.VideoCapture(r"C:\Users\fdool\OneDrive\Documents\My_Bus\test1.mp4")
+video_capture = cv2.VideoCapture(r"C:\Users\fdool\OneDrive\Documents\My_Bus\test3.mp4")
 video_capture.set(3, 1280)
 video_capture.set(4, 720)
 video_capture.set(10, 70)
@@ -120,11 +120,11 @@ while True:
     cvzone.putTextRect(frame, f'P_IN: {p_in}', (428, 56), 1, 1)
 
     cv2.imshow('RGB', frame)
-    time.sleep(0.01)  # Adjusted to speed up the video
+    time.sleep(0)  # Adjusted to speed up the video
     if cv2.waitKey(1) & 0xFF == 27:  # Press 'Esc' to exit
         break
 
 # Release the video capture and close windows
-video_capture.release()
-cv2.destroyAllWindows()
+#video_capture.release()
+#cv2.destroyAllWindows()
 print("passengers =", passengers)
