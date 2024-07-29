@@ -6,11 +6,7 @@ import time
 from datetime import timedelta
 
 # Initialize Firebase Firestore
-cred = credentials.Certificate(
-    r"file.json")
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://my-bus-421811-default-rtdb.firebaseio.com/'
-})
+
 firestore_db = firestore.client()
 realtime_db = db.reference('gps_locations')
 
