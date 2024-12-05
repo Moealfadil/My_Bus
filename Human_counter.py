@@ -9,13 +9,13 @@ thres = 0.55
 
 # Load class names
 classNames = []
-classFile = r"C:\Users\fdool\OneDrive\Documents\My_Bus\coco.names"
+classFile = r"/home/mb/Desktop/Mybus/alfadil/My_Bus/coco.names"
 with open(classFile, 'rt') as f:
     classNames = f.read().rstrip('\n').split('\n')
 
 # Load pre-trained model from disk
-configPath = r"C:\Users\fdool\OneDrive\Documents\My_Bus\ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
-weightsPath = r'C:\Users\fdool\OneDrive\Documents\My_Bus\frozen_inference_graph.pb'
+configPath = r"/home/mb/Desktop/Mybus/alfadil/My_Bus/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
+weightsPath = r'/home/mb/Desktop/Mybus/alfadil/My_Bus/frozen_inference_graph.pb'
 
 # Define model
 net = cv2.dnn_DetectionModel(weightsPath, configPath)
@@ -25,7 +25,7 @@ net.setInputMean((127.5, 127.5, 127.5))
 net.setInputSwapRB(True)
 
 # Load video
-video_capture = cv2.VideoCapture(r"C:\Users\fdool\OneDrive\Documents\My_Bus\videos\2.mp4")
+video_capture = cv2.VideoCapture(r"/home/mb/Desktop/Mybus/alfadil/My_Bus/test1.mp4")
 video_capture.set(3, 1280)
 video_capture.set(4, 720)
 video_capture.set(10, 70)
